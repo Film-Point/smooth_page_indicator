@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:preload_page_view/preload_page_view.dart';
 
 import 'effects/indicator_effect.dart';
 import 'effects/worm_effect.dart';
@@ -14,7 +15,7 @@ typedef OnDotClicked = void Function(int index);
 /// Uses the [PageController.offset] to animate the active dot
 class SmoothPageIndicator extends StatefulWidget {
   /// The page view controller
-  final PageController controller;
+  final dynamic controller;
 
   /// Holds effect configuration to be used in the [BasicIndicatorPainter]
   final IndicatorEffect effect;
@@ -80,18 +81,19 @@ mixin _SizeAndRotationCalculatorMixin {
   }
 
   TextDirection? _getDirectionality() {
-    return context
-        .findAncestorWidgetOfExactType<Directionality>()
-        ?.textDirection;
+    return context.findAncestorWidgetOfExactType<Directionality>()?.textDirection;
   }
 }
 
-class _SmoothPageIndicatorState extends State<SmoothPageIndicator>
-    with _SizeAndRotationCalculatorMixin {
+class _SmoothPageIndicatorState extends State<SmoothPageIndicator> with _SizeAndRotationCalculatorMixin {
   @override
   void initState() {
-    super.initState();
-    updateSizeAndRotation();
+    if (widget.controller is PageController || widget.controller is PreloadPageController) {
+      super.initState();
+      updateSizeAndRotation();
+    } else {
+      throw ArgumentError('Value must be a PageController or PreloadPageController');
+    }
   }
 
   @override
@@ -117,8 +119,7 @@ class _SmoothPageIndicatorState extends State<SmoothPageIndicator>
 
   double get _offset {
     try {
-      var offset =
-          widget.controller.page ?? widget.controller.initialPage.toDouble();
+      var offset = widget.controller.page ?? widget.controller.initialPage.toDouble();
       return offset % widget.count;
     } catch (_) {
       return widget.controller.initialPage.toDouble();
@@ -240,12 +241,10 @@ class AnimatedSmoothIndicator extends ImplicitlyAnimatedWidget {
         );
 
   @override
-  AnimatedWidgetBaseState<AnimatedSmoothIndicator> createState() =>
-      _AnimatedSmoothIndicatorState();
+  AnimatedWidgetBaseState<AnimatedSmoothIndicator> createState() => _AnimatedSmoothIndicatorState();
 }
 
-class _AnimatedSmoothIndicatorState
-    extends AnimatedWidgetBaseState<AnimatedSmoothIndicator>
+class _AnimatedSmoothIndicatorState extends AnimatedWidgetBaseState<AnimatedSmoothIndicator>
     with _SizeAndRotationCalculatorMixin {
   Tween<double>? _offset;
 
